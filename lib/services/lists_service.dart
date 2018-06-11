@@ -99,7 +99,7 @@ class ListsService {
         if (change.friend == null) {
           print("  Updating all friends' lists...");
           getFriendsLists(cache: false).listen((i) => {});
-        } else {
+        } else if (change.friend.state) {
           print("  Updating ${change.friend.user.name}'s lists...");
           refreshFriendsLists(change.friend, change.refresh);
         }
@@ -116,7 +116,8 @@ class ListsService {
     StreamController<int> streamController;
 
     streamController = new StreamController(onListen: () async {
-      List<Friend> friends = await _friendsService.getCurrentFriends();
+      List<Friend> friends =
+          new List.from(await _friendsService.getCurrentFriends());
       friends.removeWhere((friend) => !friend.state);
 
       List<GiftList> friendsLists = <GiftList>[];

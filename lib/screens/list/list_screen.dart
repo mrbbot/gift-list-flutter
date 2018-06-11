@@ -125,6 +125,7 @@ class _ListScreenState extends State<ListScreen> {
                       } else {
                         return new Divider(
                           height: 0.0,
+                          //color: Colors.transparent,
                         );
                       }
                     },

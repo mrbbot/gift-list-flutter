@@ -91,8 +91,9 @@ class FriendsService {
   }
 
   Future<String> addFriend(String email) async {
-    //TODO: issue when adding friend with existing pending request
+    //TODO: Fix issue when adding friend with existing pending request
     return post("/friend", {"email": email}).then((response) {
+      print(response.body);
       switch (response.statusCode) {
         case HttpStatus.OK:
           Friend newFriend = new Friend.fromJson(
