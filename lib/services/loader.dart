@@ -11,11 +11,14 @@ Stream<double> load() {
   StreamController<double> controller;
   controller = new StreamController<double>(onListen: () async {
     controller.add(0.1);
+    await _listsService.getMyLists(cache: false);
+
+    controller.add(0.2);
     List<Friend> friends =
         await _friendsService.getCurrentFriends(cache: false);
 
     await for(int i in _listsService.getFriendsLists(cache: false)) {
-      controller.add(((i / friends.length) * 0.9) + 0.1);
+      controller.add(((i / friends.length) * 0.8) + 0.2);
     }
 
     controller.close();

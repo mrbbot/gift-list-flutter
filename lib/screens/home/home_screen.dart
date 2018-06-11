@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:gift_list/components/dialog.dart';
+import 'package:gift_list/components/empty_state.dart';
 import 'package:gift_list/models/friend.dart';
+import 'package:gift_list/models/gift.dart';
 import 'package:gift_list/models/gift_list.dart';
-import 'package:gift_list/screens/edit_list/view_list_screen.dart';
+import 'package:gift_list/screens/list/list_screen.dart';
 import 'package:gift_list/screens/home/pages/friends_lists/friends_lists.dart';
 import 'package:gift_list/screens/home/pages/manage_friends/add_friend_dialog.dart';
 import 'package:gift_list/screens/home/pages/manage_friends/manage_friends.dart';
+import 'package:gift_list/screens/home/pages/my_lists/my_lists.dart';
 import 'package:gift_list/services/friends_service.dart';
 import 'package:gift_list/services/lists_service.dart';
 
@@ -24,6 +27,8 @@ class _HomeScreenState extends State<HomeScreen>
 
   AnimationController _requestsBadgeAnimationController;
   Animation<double> _requestsBadgeAnimation;
+
+  List<GiftList> _myLists = <GiftList>[];
 
   List<GiftList> _friendsLists = <GiftList>[];
 
@@ -73,6 +78,16 @@ class _HomeScreenState extends State<HomeScreen>
 
         _listsService.getFriendsLists();
       }
+
+      if (_listsService.isMyListsCacheValid()) {
+        _listsService.myListsStream.forEach((myLists) {
+          setState(() {
+            this._myLists = myLists;
+          });
+        });
+
+        _listsService.getMyLists();
+      }
     }
   }
 
@@ -96,6 +111,38 @@ class _HomeScreenState extends State<HomeScreen>
     setState(() => this._page = page);
   }
 
+  Widget _buildMyListsPage() {
+    return new MyListsPage(
+      myLists: _myLists,
+      onRefresh: () async {
+        await _listsService.getMyLists(cache: false);
+        return null;
+      },
+      onClick: (int id) {
+        Navigator
+            .of(context)
+            .push(new MaterialPageRoute(builder: (BuildContext context) {
+          return new ListScreen(
+            list: _myLists.firstWhere((list) => list.id == id),
+            onRefresh: () async {
+              await _listsService.getMyLists(cache: false);
+              return null;
+            },
+            onEdit: (int listId, String name, String description) async {
+              await _listsService.editList(listId, name, description);
+              return null;
+            },
+          );
+        }));
+      },
+      onRemove: (int id) async {
+        print("Remove List: $id");
+        String error = await _listsService.removeList(id);
+        if (error != null) showMessageDialog(context, "Error", error);
+      },
+    );
+  }
+
   Widget _buildFriendsListsPage() {
     return new FriendsListsPage(
       friendsLists: _friendsLists,
@@ -107,7 +154,7 @@ class _HomeScreenState extends State<HomeScreen>
         Navigator
             .of(context)
             .push(new MaterialPageRoute(builder: (BuildContext context) {
-          return new ViewListScreen(
+          return new ListScreen(
             list: _friendsLists.firstWhere((list) => list.id == id),
             onRefresh: () async {
               //Technically updates all of the friend's lists but meh, would
@@ -163,9 +210,27 @@ class _HomeScreenState extends State<HomeScreen>
   Widget _buildPageView() {
     return new PageView(
       children: <Widget>[
-        new Text("Page 0"),
-        _buildFriendsListsPage(),
-        _buildManageFriendsPage(),
+        _myLists.length > 0
+            ? _buildMyListsPage()
+            : new EmptyState(
+                icon: Icons.layers_clear,
+                message:
+                    "You don't have any lists! Add some so friends know what you want!",
+              ),
+        _friendsLists.length > 0
+            ? _buildFriendsListsPage()
+            : new EmptyState(
+                icon: Icons.cake,
+                message:
+                    "You don't have any lists that you can claim from! Add some more friends so you can start sharing ideas!",
+              ),
+        (_currentFriends.length + _friendRequests.length) > 0
+            ? _buildManageFriendsPage()
+            : new EmptyState(
+                icon: Icons.person_outline,
+                message:
+                    "It seems you don't have any friends! Send a request to start seeing other peoples' lists!",
+              ),
       ],
       controller: _pageController,
       onPageChanged: onPageChanged,
@@ -236,7 +301,20 @@ class _HomeScreenState extends State<HomeScreen>
     return _page == 0
         ? new FloatingActionButton(
             onPressed: () {
-              print("Add List");
+              Navigator
+                  .of(context)
+                  .push(new MaterialPageRoute(builder: (BuildContext context) {
+                return new ListScreen(
+                  list: new GiftList(
+                    id: null,
+                    name: "",
+                    friend: null,
+                    description: "",
+                    gifts: <Gift>[],
+                  ),
+                  onRefresh: () {},
+                );
+              }));
             },
             tooltip: "Add List",
             child: new Icon(Icons.add),
@@ -244,7 +322,7 @@ class _HomeScreenState extends State<HomeScreen>
         : (_page == 2
             ? new FloatingActionButton(
                 onPressed: () {
-                  return showDialog(
+                  showDialog(
                       context: context,
                       barrierDismissible: false,
                       builder: (BuildContext context) {

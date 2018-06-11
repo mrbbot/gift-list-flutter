@@ -6,12 +6,14 @@ import 'package:gift_list/models/gift.dart';
 class GiftCard extends StatelessWidget {
   final Gift gift;
   final bool working;
+  final bool currentUsers;
   final VoidCallback onClaim;
   final VoidCallback onRemoveClaim;
 
   GiftCard({
     this.gift,
     this.working,
+    this.currentUsers,
     this.onClaim,
     this.onRemoveClaim,
   });
@@ -37,23 +39,34 @@ class GiftCard extends StatelessWidget {
     if (working) {
       buttons.add(new CircularProgressIndicator());
     } else {
-      if (gift.canClaim) {
-        buttons.add(new IconButton(
-          icon: gift.claimed
-              ? new Icon(
-            Icons.favorite,
-            color: Theme.of(context).primaryColor,
-          )
-              : new Icon(Icons.favorite_border),
-          onPressed: gift.claimed ? onRemoveClaim : onClaim,
-          tooltip: gift.claimed ? "Remove Claim" : "Claim",
-        ));
+      if (currentUsers) {
+        //TODO: Add edit/remove buttons
+      } else {
+        if (gift.canClaim) {
+          buttons.add(new IconButton(
+            icon: gift.claimed
+                ? new Icon(
+                    Icons.favorite,
+                    color: Theme.of(context).primaryColor,
+                  )
+                : new Icon(Icons.favorite_border),
+            onPressed: gift.claimed ? onRemoveClaim : onClaim,
+            tooltip: gift.claimed ? "Remove Claim" : "Claim",
+          ));
+        }
       }
     }
 
+    Text descriptionText =
+        gift.description != null ? new Text(gift.description) : null;
+
     return new ListTile(
       title: new Text(gift.name),
-      subtitle: gift.claimed ? new Text("Claimed by ${gift.claimedBy}") : null,
+      subtitle: currentUsers
+          ? descriptionText
+          : (gift.claimed
+              ? new Text("Claimed by ${gift.claimedBy}")
+              : descriptionText),
       trailing: new Row(
         mainAxisSize: MainAxisSize.min,
         children: buttons,

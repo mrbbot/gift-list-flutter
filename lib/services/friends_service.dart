@@ -80,12 +80,12 @@ class FriendsService {
     });
   }
 
-  Future<List<Friend>> getCurrentFriends({cache = true}) async {
+  Future<List<Friend>> getCurrentFriends({bool cache = true}) async {
     if (!cache || !isCacheValid()) await _getFriends();
     return _pushCurrentFriends();
   }
 
-  Future<List<Friend>> getFriendRequests({cache = true}) async {
+  Future<List<Friend>> getFriendRequests({bool cache = true}) async {
     if (!cache || !isCacheValid()) await _getFriends();
     return _pushFriendRequests();
   }
@@ -113,7 +113,7 @@ class FriendsService {
         case HttpStatus.NOT_FOUND:
           return "Cannot find user!";
       }
-      return "An unexpected error occured.";
+      return "An unexpected error occurred.";
     });
   }
 
@@ -135,7 +135,7 @@ class FriendsService {
 
         return null;
       } else {
-        return "An unexpected error occued.";
+        return "An unexpected error occurred.";
       }
     });
   }
@@ -147,7 +147,7 @@ class FriendsService {
         _pushFriendRequests();
         return null;
       } else {
-        return "An unexpected error occued.";
+        return "An unexpected error occurred.";
       }
     });
   }
@@ -165,7 +165,7 @@ class FriendsService {
 
         return null;
       } else {
-        return "An unexpected error occued.";
+        return "An unexpected error occurred.";
       }
     });
   }

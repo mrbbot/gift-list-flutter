@@ -54,6 +54,8 @@ class GiftList {
       .map((gift) => gift.imageUrl)
       .toList();
 
+  bool get currentUsers => friend == null;
+
   @override
   String toString() {
     return "{GiftList: id: $id, name: $name, friend: $friend, description: $description, gifts: $gifts}";

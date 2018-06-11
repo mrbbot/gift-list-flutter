@@ -15,17 +15,24 @@ class ListsService {
   static ListsService instance = new ListsService._();
 
   StreamController<List<GiftList>> _friendsListsStreamController;
+  StreamController<List<GiftList>> _myListsStreamController;
 
   ListsService._() {
     _friendsListsStreamController = new StreamController.broadcast();
+    _myListsStreamController = new StreamController.broadcast();
   }
 
   List<GiftList> _cachedFriendsLists;
+  List<GiftList> _cachedMyLists;
 
   bool isFriendsListsCacheValid() => _cachedFriendsLists != null;
 
+  bool isMyListsCacheValid() => _cachedMyLists != null;
+
   Stream<List<GiftList>> get friendsListsStream =>
       _friendsListsStreamController.stream;
+
+  Stream<List<GiftList>> get myListsStream => _myListsStreamController.stream;
 
   List<GiftList> _pushFriendsLists() {
     List<GiftList> result = new List.from(_cachedFriendsLists);
@@ -49,6 +56,15 @@ class ListsService {
     });
 
     _friendsListsStreamController.add(result);
+    return result;
+  }
+
+  List<GiftList> _pushMyLists() {
+    List<GiftList> result = new List.from(_cachedMyLists);
+
+    result.sort((a, b) => b.id - a.id);
+
+    _myListsStreamController.add(result);
     return result;
   }
 
@@ -91,7 +107,7 @@ class ListsService {
     }
   }
 
-  Stream<int> getFriendsLists({cache = true}) {
+  Stream<int> getFriendsLists({bool cache = true}) {
     if (cache && isFriendsListsCacheValid()) {
       _pushFriendsLists();
       return null;
@@ -155,7 +171,54 @@ class ListsService {
 
         return null;
       } else {
-        return "An unexpected error occued.";
+        return "An unexpected error occurred.";
+      }
+    });
+  }
+
+  Future<List<GiftList>> getMyLists({bool cache = true}) async {
+    if (!cache || !isMyListsCacheValid()) {
+      ApiResponse response =
+          await get("/lists/${(await _authService.currentUser()).uid}");
+      _cachedMyLists = (response.body as List<dynamic>)
+          .map((listJson) => new GiftList.fromJson(listJson, friend: null))
+          .toList();
+    }
+    return _pushMyLists();
+  }
+
+  Stream<GiftList> getMyList(int id) {
+    return myListsStream.transform(new StreamTransformer.fromHandlers(
+        handleData: (List<GiftList> data, EventSink<GiftList> sink) {
+      sink.add(data.firstWhere((list) => list.id == id));
+    }));
+  }
+
+  Future<String> editList(int id, String name, String description) {
+    return post("/list/$id", {
+      "name": name,
+      "description": description,
+    }).then((response) {
+      if (response.statusCode == HttpStatus.OK) {
+        int listIndex = _cachedMyLists.indexWhere((list) => list.id == id);
+        _cachedMyLists[listIndex].name = name;
+        _cachedMyLists[listIndex].description = description;
+        _pushMyLists();
+        return null;
+      } else {
+        return "An unexpected error occurred.";
+      }
+    });
+  }
+
+  Future<String> removeList(int id) {
+    return delete("/list/$id").then((response) {
+      if (response.statusCode == HttpStatus.OK) {
+        _cachedMyLists.removeWhere((list) => list.id == id);
+        _pushMyLists();
+        return null;
+      } else {
+        return "An unexpected error occurred.";
       }
     });
   }
