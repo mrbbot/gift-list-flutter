@@ -1,8 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:gift_list/components/dialog.dart';
 import 'package:gift_list/components/empty_state.dart';
 import 'package:gift_list/models/friend.dart';
-import 'package:gift_list/models/gift.dart';
 import 'package:gift_list/models/gift_list.dart';
 import 'package:gift_list/screens/list/list_screen.dart';
 import 'package:gift_list/screens/home/pages/friends_lists/friends_lists.dart';
@@ -111,6 +112,21 @@ class _HomeScreenState extends State<HomeScreen>
     setState(() => this._page = page);
   }
 
+  Future<Null> _myListsRefresh() async {
+    await _listsService.getMyLists(cache: false);
+    return null;
+  }
+
+  Future<Null> _myListsEdit(int listId, String name, String description) async {
+    await _listsService.editList(listId, name, description);
+    return null;
+  }
+
+  Future<Null> _myListsRemove(int listId, int giftId) async {
+    await _listsService.removeGift(listId, giftId);
+    return null;
+  }
+
   Widget _buildMyListsPage() {
     return new MyListsPage(
       myLists: _myLists,
@@ -124,14 +140,9 @@ class _HomeScreenState extends State<HomeScreen>
             .push(new MaterialPageRoute(builder: (BuildContext context) {
           return new ListScreen(
             list: _myLists.firstWhere((list) => list.id == id),
-            onRefresh: () async {
-              await _listsService.getMyLists(cache: false);
-              return null;
-            },
-            onEdit: (int listId, String name, String description) async {
-              await _listsService.editList(listId, name, description);
-              return null;
-            },
+            onRefresh: _myListsRefresh,
+            onEdit: _myListsEdit,
+            onRemove: _myListsRemove,
           );
         }));
       },
@@ -300,19 +311,16 @@ class _HomeScreenState extends State<HomeScreen>
   Widget _buildFloatingActionButton() {
     return _page == 0
         ? new FloatingActionButton(
-            onPressed: () {
+            onPressed: () async {
+              GiftList list = await _listsService.createList();
               Navigator
                   .of(context)
                   .push(new MaterialPageRoute(builder: (BuildContext context) {
                 return new ListScreen(
-                  list: new GiftList(
-                    id: null,
-                    name: "",
-                    friend: null,
-                    description: "",
-                    gifts: <Gift>[],
-                  ),
-                  onRefresh: () {},
+                  list: list,
+                  onRefresh: _myListsRefresh,
+                  onEdit: _myListsEdit,
+                  onRemove: _myListsRemove,
                 );
               }));
             },

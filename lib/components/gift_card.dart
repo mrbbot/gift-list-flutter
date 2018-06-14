@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gift_list/components/dialog.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:gift_list/models/gift.dart';
+import 'package:transparent_image/transparent_image.dart';
 
 class GiftCard extends StatelessWidget {
   final Gift gift;
@@ -9,6 +10,8 @@ class GiftCard extends StatelessWidget {
   final bool currentUsers;
   final VoidCallback onClaim;
   final VoidCallback onRemoveClaim;
+  final VoidCallback onEdit;
+  final VoidCallback onRemove;
 
   GiftCard({
     this.gift,
@@ -16,6 +19,8 @@ class GiftCard extends StatelessWidget {
     this.currentUsers,
     this.onClaim,
     this.onRemoveClaim,
+    this.onEdit,
+    this.onRemove,
   });
 
   @override
@@ -40,7 +45,10 @@ class GiftCard extends StatelessWidget {
       buttons.add(new CircularProgressIndicator());
     } else {
       if (currentUsers) {
-        //TODO: Add edit/remove buttons
+        buttons.add(new IconButton(
+          icon: new Icon(Icons.delete),
+          onPressed: onRemove,
+        ));
       } else {
         if (gift.canClaim) {
           buttons.add(new IconButton(
@@ -57,19 +65,41 @@ class GiftCard extends StatelessWidget {
       }
     }
 
-    Text descriptionText =
-        gift.description != null ? new Text(gift.description) : null;
+    Text descriptionText = (gift.description != null && gift.description != "")
+        ? new Text(gift.description)
+        : null;
 
-    return new ListTile(
-      title: new Text(gift.name),
-      subtitle: currentUsers
-          ? descriptionText
-          : (gift.claimed
-              ? new Text("Claimed by ${gift.claimedBy}")
-              : descriptionText),
-      trailing: new Row(
-        mainAxisSize: MainAxisSize.min,
-        children: buttons,
+    List<Widget> cardColumnChildren = <Widget>[];
+
+    if (gift.imageUrl != null && gift.imageUrl != "") {
+      cardColumnChildren.add(new FadeInImage.memoryNetwork(
+        placeholder: kTransparentImage,
+        image: gift.imageUrl,
+      ));
+    }
+
+    cardColumnChildren.add(
+      new ListTile(
+        title: new Text(gift.name),
+        subtitle: currentUsers
+            ? descriptionText
+            : (gift.claimed
+                ? new Text("Claimed by ${gift.claimedBy}")
+                : descriptionText),
+        trailing: new Row(
+          mainAxisSize: MainAxisSize.min,
+          children: buttons,
+        ),
+      ),
+    );
+
+    return new Card(
+      child: new InkWell(
+        onTap: currentUsers ? onEdit : null,
+        child: new Column(
+          mainAxisSize: MainAxisSize.min,
+          children: cardColumnChildren,
+        ),
       ),
     );
   }

@@ -48,7 +48,7 @@ class GiftListCard extends StatelessWidget {
                       showConfirmDialog(
                           context,
                           "Remove",
-                          "Are you sure you want to remove this list?",
+                          "Are you sure you want to remove this list? This will delete all of its gifts.",
                           onRemove);
                     },
                   ))

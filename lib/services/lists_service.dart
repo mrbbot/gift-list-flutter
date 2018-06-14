@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:gift_list/models/friend.dart';
+import 'package:gift_list/models/gift.dart';
 import 'package:gift_list/models/gift_list.dart';
 import 'package:gift_list/models/user.dart';
 import 'package:gift_list/services/api.dart';
@@ -195,6 +196,20 @@ class ListsService {
     }));
   }
 
+  Future<GiftList> createList() {
+    return post("/list", {
+      "name": "",
+      "decription": "",
+    }).then((response) {
+      GiftList newList = new GiftList.fromJson(
+          (response.body as Map<String, dynamic>),
+          friend: null);
+      _cachedMyLists.add(newList);
+      _pushMyLists();
+      return newList;
+    });
+  }
+
   Future<String> editList(int id, String name, String description) {
     return post("/list/$id", {
       "name": name,
@@ -216,6 +231,65 @@ class ListsService {
     return delete("/list/$id").then((response) {
       if (response.statusCode == HttpStatus.OK) {
         _cachedMyLists.removeWhere((list) => list.id == id);
+        _pushMyLists();
+        return null;
+      } else {
+        return "An unexpected error occurred.";
+      }
+    });
+  }
+
+  Future<String> addGift(int listId, String name, String description,
+      String url, String imageUrl) {
+    return post("/list/$listId/gift", {
+      "name": name,
+      "description": description,
+      "url": url,
+      "imageUrl": imageUrl
+    }).then((response) {
+      if (response.statusCode == HttpStatus.OK) {
+        int listIndex = _cachedMyLists.indexWhere((list) => list.id == listId);
+        _cachedMyLists[listIndex]
+            .gifts
+            .add(new Gift.fromJson(response.body as Map<String, dynamic>));
+        _pushMyLists();
+        return null;
+      } else {
+        return "An unexpected error occurred.";
+      }
+    });
+  }
+
+  Future<String> editGift(int listId, int giftId, String name,
+      String description, String url, String imageUrl) {
+    return post("/list/$listId/gift/$giftId", {
+      "name": name,
+      "description": description,
+      "url": url,
+      "imageUrl": imageUrl
+    }).then((response) {
+      if (response.statusCode == HttpStatus.OK) {
+        int listIndex = _cachedMyLists.indexWhere((list) => list.id == listId);
+        int giftIndex = _cachedMyLists[listIndex]
+            .gifts
+            .indexWhere((gift) => gift.id == giftId);
+        _cachedMyLists[listIndex].gifts[giftIndex] =
+            new Gift.fromJson(response.body as Map<String, dynamic>);
+        _pushMyLists();
+        return null;
+      } else {
+        return "An unexpected error occurred.";
+      }
+    });
+  }
+
+  Future<String> removeGift(int listId, int giftId) {
+    return delete("/list/$listId/gift/$giftId").then((response) {
+      if (response.statusCode == HttpStatus.OK) {
+        int listIndex = _cachedMyLists.indexWhere((list) => list.id == listId);
+        _cachedMyLists[listIndex]
+            .gifts
+            .removeWhere((gift) => gift.id == giftId);
         _pushMyLists();
         return null;
       } else {

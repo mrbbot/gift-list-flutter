@@ -15,7 +15,7 @@ Stream<double> load() {
 
     controller.add(0.2);
     List<Friend> friends =
-        await _friendsService.getCurrentFriends(cache: false);
+        new List.from(await _friendsService.getCurrentFriends(cache: false));
     friends.removeWhere((friend) => !friend.state);
 
     if (friends.length > 0) {

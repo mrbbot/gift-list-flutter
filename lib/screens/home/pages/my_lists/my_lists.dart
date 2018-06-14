@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:gift_list/models/gift_list.dart';
-import 'package:gift_list/screens/home/pages/friends_lists/gift_list_card.dart';
+import 'package:gift_list/components/gift_list_card.dart';
 
 class MyListsPage extends StatefulWidget {
   final List<GiftList> myLists;
