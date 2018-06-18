@@ -179,39 +179,41 @@ class _ListScreenState extends State<ListScreen> {
                         "This list is empty! Add some gifts so your friends can start claiming stuff!",
                   ),
           ),
-          floatingActionButton: new FloatingActionButton(
-            onPressed: () {
-              showDialog(
-                  context: context,
-                  barrierDismissible: false,
-                  builder: (BuildContext context) {
-                    return new GiftDialog(
-                      gift: new Gift(
-                        id: null,
-                        name: "",
-                        description: "",
-                        url: "",
-                        imageUrl: "",
-                        claim: new Claim(
-                          state: 0,
-                          user: User.nullUser,
-                        ),
-                      ),
-                      onAdd: (name, description, url, imageUrl) async {
-                        await _listsService.addGift(
-                          snapshot.data.id,
-                          name,
-                          description,
-                          url,
-                          imageUrl,
-                        );
-                        return null;
-                      },
-                    );
-                  });
-            },
-            child: new Icon(Icons.add),
-          ),
+          floatingActionButton: currentUsers
+              ? new FloatingActionButton(
+                  onPressed: () {
+                    showDialog(
+                        context: context,
+                        barrierDismissible: false,
+                        builder: (BuildContext context) {
+                          return new GiftDialog(
+                            gift: new Gift(
+                              id: null,
+                              name: "",
+                              description: "",
+                              url: "",
+                              imageUrl: "",
+                              claim: new Claim(
+                                state: 0,
+                                user: User.nullUser,
+                              ),
+                            ),
+                            onAdd: (name, description, url, imageUrl) async {
+                              await _listsService.addGift(
+                                snapshot.data.id,
+                                name,
+                                description,
+                                url,
+                                imageUrl,
+                              );
+                              return null;
+                            },
+                          );
+                        });
+                  },
+                  child: new Icon(Icons.add),
+                )
+              : null,
         );
       },
     );
