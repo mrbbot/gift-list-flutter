@@ -9,3 +9,6 @@
 /captures
 GeneratedPluginRegistrant.java
 key.properties
+deployment_cert.der
+keystore.jks
+upload_certificate.pem
