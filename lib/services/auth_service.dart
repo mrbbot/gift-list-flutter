@@ -18,8 +18,12 @@ class AuthService {
 
   AuthService._() {
     _auth.onAuthStateChanged.forEach((user) {
-      print("Setting cached user to ${user.email}");
-      _cachedUser = new User.fromFirebaseUser(user);
+      if(user != null) {
+        print("Setting cached user to ${user.email}");
+        _cachedUser = new User.fromFirebaseUser(user);
+      } else {
+        _cachedUser = null;
+      }
     });
   }
 
